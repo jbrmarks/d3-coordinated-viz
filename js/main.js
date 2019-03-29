@@ -9,7 +9,7 @@ function setMap() {
     
     // Map frame dimensions
     var width = 960, 
-        height = 460;
+        height = 860;
     
     // Create new svg container for the map
     var map = d3.select("body")
@@ -20,10 +20,10 @@ function setMap() {
     
     // Create Albers equal area conic projection centered on Chicago, IL
     var projection = d3.geoAlbers()
-        .center([0, -87.6298])
-        .rotate([41.8781, 0])
+        .center([0, 41.8781])
+        .rotate([87.6298, 0])
         .parallels([41.583333, 42.133333])
-        .scale(50000)
+        .scale(100000)
         .translate([width / 2, height / 2]);
     
     var path = d3.geoPath()
@@ -34,7 +34,8 @@ function setMap() {
     // Use Promise.all to parallelize asynchronous data loading
     var promises = [];
     promises.push(d3.csv("data/Chicago_500_cities_data.csv")); // Load attributes from csv
-    promises.push(d3.json("data/Background_Tracts_WGS84.topojson")); // Load background spatial data
+    //promises.push(d3.json("data/ne_10m_admin_1_states_provin_WGS84.topojson")); // Load background spatial data
+    promises.push(d3.json("data/Background_Tracts_WGS84.topojson")); // Load background spatial data (tract level)
     promises.push(d3.json("data/Chicago_Census_Tracts_WGS84.topojson")); // Load census tract data
     
     Promise.all(promises).then(callback);
@@ -53,7 +54,9 @@ function setMap() {
         
         
         // Translate census tracts TopoJSON
-        var baseMapGeoJson = topojson.feature(baseMap, baseMap.objects.Background_Tracts_WGS84), chicagoTractsGeoJsonFeatures = topojson.feature(chicagoTracts, chicagoTracts.objects.Chicago_Census_Tracts_WGS84).features;
+        //var baseMapGeoJson = topojson.feature(baseMap, baseMap.objects.ne_10m_admin_1_states_provin_WGS84);
+        var baseMapGeoJson = topojson.feature(baseMap, baseMap.objects.Background_Tracts_WGS84);
+        var chicagoTractsGeoJsonFeatures = topojson.feature(chicagoTracts, chicagoTracts.objects.Chicago_Census_Tracts_WGS84).features;
         
         console.log("baseMapGeoJson: ");
         console.log(baseMapGeoJson);
