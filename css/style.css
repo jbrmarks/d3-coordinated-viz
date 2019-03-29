@@ -1,1 +1,7 @@
 /* Stylesheet by Joe Marks, 2019 */
+
+.baseMapPath {
+    fill: #FFF;
+    stroke: #CCC;
+    stroke-width: 2px;
+}

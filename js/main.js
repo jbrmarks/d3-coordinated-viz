@@ -6,31 +6,80 @@ window.onload = setMap();
 
 // Set up choropleth map
 function setMap() {
+    
+    // Map frame dimensions
+    var width = 960, 
+        height = 460;
+    
+    // Create new svg container for the map
+    var map = d3.select("body")
+        .append("svg")
+        .attr("class", "map")
+        .attr("width", width)
+        .attr("height", height);
+    
+    // Create Albers equal area conic projection centered on Chicago, IL
+    var projection = d3.geoAlbers()
+        .center([0, -87.6298])
+        .rotate([41.8781, 0])
+        .parallels([41.583333, 42.133333])
+        .scale(50000)
+        .translate([width / 2, height / 2]);
+    
+    var path = d3.geoPath()
+        .projection(projection);
+    
+    
+    
     // Use Promise.all to parallelize asynchronous data loading
     var promises = [];
     promises.push(d3.csv("data/Chicago_500_cities_data.csv")); // Load attributes from csv
-    promises.push(d3.json("data/Countries.topojson")); // Load background spatial data
-    promises.push(d3.json("data/Chicago_Census_Tracts.topojson")); // Load census tract data
+    promises.push(d3.json("data/Background_Tracts_WGS84.topojson")); // Load background spatial data
+    promises.push(d3.json("data/Chicago_Census_Tracts_WGS84.topojson")); // Load census tract data
     
     Promise.all(promises).then(callback);
     
     function callback(data){
         csvData = data[0];
-        countries = data[1];
-        tracts = data[2];
-        //TODO: basemap
+        baseMap = data[1]; 
+        chicagoTracts = data[2]; 
+
+        console.log("csvData: ");
         console.log(csvData);
-        console.log(countries);
-        console.log(tracts);
+        console.log("baseMap: ");
+        console.log(baseMap);
+        console.log("chicagoTracts: ");
+        console.log(chicagoTracts);
         
-        console.log(countries.objects);
         
         // Translate census tracts TopoJSON
-        var states = topojson.feature(countries, countries.objects.ne_10m_admin_1_states_provinces), censusTracts = topojson.feature(tracts, tracts.objects.Chicago_Census_Tracts).features;
+        var baseMapGeoJson = topojson.feature(baseMap, baseMap.objects.Background_Tracts_WGS84), chicagoTractsGeoJsonFeatures = topojson.feature(chicagoTracts, chicagoTracts.objects.Chicago_Census_Tracts_WGS84).features;
+        
+        console.log("baseMapGeoJson: ");
+        console.log(baseMapGeoJson);
+        console.log("chicagoTractsGeoJsonFeatures: ");
+        console.log(chicagoTractsGeoJsonFeatures);
+        
+        // Add countries to the map
+        var baseMapPath = map.append("path")
+            .datum(baseMapGeoJson)
+            .attr("class", "baseMap")
+            .attr("d", path);
+        
+        // Add Chicago census tracts to map
+        var chicagoTractsPath = map.selectAll(".chicagoTractsPath")
+            .data(chicagoTractsGeoJsonFeatures)
+            .enter()
+            .append("path")
+            .attr("class", function(d){
+                return "chicagoTractsPath " + d.properties.plctract10
+            })
+            .attr("d", path);
         
         
-        
-        console.log(states);
-        console.log(censusTracts);
+        console.log("baseMapPath: ");
+        console.log(baseMapPath);
+        console.log("chicagoTractsPath: ");
+        console.log(chicagoTractsPath);
     }
 }
