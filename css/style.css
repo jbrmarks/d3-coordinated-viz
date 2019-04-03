@@ -7,8 +7,9 @@
 }
 
 .chicagoTractsPath {
-    stroke: #CCC;
-    stroke-width: 2px;
+    stroke: #000;
+    stroke-width: 0.5px;
+    stroke-linecap: round;
 }
 
 .gratLines {
@@ -23,4 +24,12 @@
 
 .map {
     border: medium solid #999;
+    margin: 10 px 0 0 20px;
+}
+
+.chart {
+    background-color: rgba(128,128,128,.2);
+    border: medium solid #999;
+    float: right;
+    margin: 10 px 20px 0 0;
 }
