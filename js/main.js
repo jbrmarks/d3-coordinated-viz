@@ -5,13 +5,13 @@
 (function(){
 
     //pseudo-global variables
-    var attrArray = ["Population2010","Lack of Health Insurance","Arthritis","Binge Drinking","High Blood Pressure","People Taking Medicine for High Blood Pressure","Cancer (Excluding Skin Cancer)","Asthma","Coronary Heart Disease","Visits to Doctor for Routine Checkup within the Past Year","Cholesterol Screening","Colon Screening","Chronic Obstructive Pulmonary Disease","Men >= 65 Years up to Date on Core Set of Clinical Preventive Services","Women >= 65 Years up to Date on Core Set of Clinical Preventive Services","Smoking","Visits to Dentist","Diabetes","High Cholesterol","Chronic Kidney Disease","No Leisure-Time Physical Activity","Mammography Use among Women aged 50-74 years","Mental Health Not Good","Obesity","Papanicolaou Smear Use Among Adult Women Aged 21-65 Years","Physical Health Not Good","Sleeping Less Than 7 Hours","Stroke","Teeth Lost Among Adults Aged >= 65 Years"];
+    var attrArray = ["Lack of Health Insurance","Arthritis","Binge Drinking","High Blood Pressure","People Taking Medicine for High Blood Pressure","Cancer (Excluding Skin Cancer)","Asthma","Coronary Heart Disease","Visits to Doctor for Routine Checkup within the Past Year","Cholesterol Screening","Colon Screening","Chronic Obstructive Pulmonary Disease","Smoking","Visits to Dentist","Diabetes","High Cholesterol","Chronic Kidney Disease","No Leisure-Time Physical Activity","Mammography Use among Women aged 50-74 years","Mental Health Not Good","Obesity","Pap Smear Use Among Adult Women Aged 21-65 Years","Physical Health Not Good","Sleeping Less Than 7 Hours","Stroke","Teeth Lost Among Adults Aged >= 65 Years"];
     //list of attributes
     var expressed = attrArray[3]; //initial attribute; 29 attributes
 
     // chart frame dimensions
     var chartWidth = window.innerWidth * 0.425,
-        chartHeight = 860,
+        chartHeight = 660,
         leftPadding = 25,
         rightPadding = 2,
         topBottomPadding = 5,
@@ -23,6 +23,10 @@
     var yScale = d3.scaleLinear()
         .range([850, 0])
         .domain([0,100]);
+    
+    // Variables to be defined later (for use in legend)
+    var colorClasses;
+    var classBreaks;
 
     //begin script when window loads
     window.onload = setMap();
@@ -31,10 +35,16 @@
     // Set up choropleth map
     function setMap() {
 
+        // Add title for map
+        var mapTitle = d3.select("body")
+            .append("div")
+            .attr("class", "mapTitle")
+            .html("Green Bay Census Tract Level Information")
+        
         // Map frame dimensions
         var width = window.innerWidth * 0.5, 
-            height = 860;
-
+            height = 660;
+        
         // Create new svg container for the map
         var map = d3.select("body")
             .append("svg")
@@ -106,6 +116,9 @@
             // Add dropdown menu
             createDropdown(csvData);
             
+            // Create a legend
+            createLegend();
+            
         }; // End of callback function
     }; // End of setMap()
     
@@ -157,8 +170,8 @@
     }
     
     function createColorScale(csvData){
-        var colorClasses = [
-        "#f1eef6",
+        colorClasses = [
+            "#f1eef6",
             "#bdc9e1",
             "#74a9cf",
             "#2b8cbe",
@@ -178,6 +191,9 @@
         
         // Assign array of expressed values as scale domain
         colorScale.domain(domainArray);
+        
+        // Save class breaks for legend use
+        classBreaks = colorScale.quantiles();
         
         return colorScale;
     };
@@ -264,49 +280,12 @@
         var desc = bars.append("desc")
             .text('{"stroke": "none", "stroke-width": "0px"}');
         
-        /*
-        // Annotate bars with attribute value text
-        var numbers = chart.selectAll(".numbers")
-            .data(csvData)
-            .enter()
-            .append("text")
-            .sort(function(a, b){
-                return a[expressed]-b[expressed];
-            })
-            .attr("class", function (d){
-                return "numbers " + d.plctract10
-            })
-            .attr("text-anchor", "middle")
-            .attr("x", function(d, i){
-                var fraction = chartWidth / csvData.length;
-                return i * fraction + (fraction-1)/2;
-            })
-            .attr("y", function(d){
-                return chartHeight - yScale(parseFloat(d[expressed])) + 15;
-            })
-            .text(function(d){
-                return d[expressed];
-            });
-        */
         // Create a text element for the chart title
-        // Note, the population attribute requires a different header
-        if (expressed == "Population2010"){
-             var chartTitle = chart.append("text")
+        var chartTitle = chart.append("text")
             .attr("x", 40)
             .attr("y", 40)
             .attr("class", "chartTitle")
-            .text("Population in 2010 for Each Census Tract");
-        }else{
-            var chartTitle = chart.append("text")
-            .attr("x", 40)
-            .attr("y", 40)
-            .attr("class", "chartTitle")
-            .text("Prevalence of " + expressed + " in Each Census Tract");
-        }
-        
-        
-        
-        
+            .text(expressed + " (%)");
         
         // Create frame for chart border
         var chartFrame = chart.append("rect")
@@ -375,6 +354,9 @@
 
         // Set bar positions, heights, and colors
         updateChart(bars, csvData.length, colorScale);
+        
+        // Create a legend
+        updateLegend();
     };
     
     function updateChart(bars, n, colorScale){
@@ -390,9 +372,13 @@
         };
         
         // Create a scale to size bars proportionally to frame
+        var max = Math.ceil(d3.max(domainArray) / 10) * 10;
+        if (max == d3.max(domainArray)){
+            max += 10;
+        }
         var yScale = d3.scaleLinear()
             .range([850, 0])
-            .domain([0, Math.ceil(d3.max(domainArray) / 10) * 10]);
+            .domain([0, max]);
         
         // Create vertical axis generator
         var yAxis = d3.axisLeft()
@@ -414,7 +400,7 @@
             })
             // Size/resize bars
             .attr("height", function(d, i){
-                return 850 - yScale(parseFloat(d[expressed]));
+                return 650 - yScale(parseFloat(d[expressed]));
             })
             .attr("y", function(d, i){
                 return yScale(parseFloat(d[expressed])) + topBottomPadding;
@@ -424,20 +410,16 @@
                 return choropleth(d, colorScale);
             });
         
-        if (expressed == "Population2010"){
-            var chartTitle = d3.select(".chartTitle")
-                .text("Population in 2010 for Each Census Tract");
-        }else{
-            var chartTitle = d3.select(".chartTitle")
-                .text("Prevalence of " + expressed + " in Each Census Tract");
-        }
+        var chartTitle = d3.select(".chartTitle")
+            .text(expressed + " (%)");
+        
     }; // End of updateChart
     
     // Function to hilghlight enumeration units and bars
     function highlight(props){
         // Change stroke
         var selected = d3.selectAll(".gb-" + props.tract2010)
-            .style("stroke", "red")
+            .style("stroke", "orange")
             .style("stroke-width", "3");
         
         setLabel(props);
@@ -477,7 +459,7 @@
         var val = parseFloat(props[expressed]);
         // If attribute value exists, create standard label; otherwise say No Data
         if (typeof val ==  'number' && !isNaN(val)){
-            var labelAttribute = "<h1>" + props[expressed] + "\<h1><b>" + expressed + "\<b>";
+            var labelAttribute = "<h1>" + props[expressed] + "%\<h1><b>" + expressed + "\<b>";
         }else{
             var labelAttribute = "<h1>" + "No Data" + "\<h1><b>" + expressed + "\<b>";
         }
@@ -518,5 +500,63 @@
             .style("left", x + "px")
             .style("top", y + "px");
     }
+    
+    // Function to create a legend using d3-svg-legend
+    function createLegend(){
+        
+        // Create a threshold scale for the legend
+        var thresholdScale = d3.scaleThreshold()
+            .domain(classBreaks)
+            .range(colorClasses);
+        
+        // Add SVG element for legend
+        var legendSVG = d3.select("body")
+            .append("svg")
+            .attr("class", "legendSVG");
+
+        // Add group element to hold legend elements
+        var legendG = legendSVG.append("g")
+            .attr("class", "legendG")
+            .attr("transform", "translate(20, 20)");
+        
+        // Create legend elements
+        var legend = d3.legendColor()
+            .shapeWidth(100)
+            .orient("horizontal")
+            .scale(thresholdScale)
+            .title(expressed + " (%)")
+            .labels(d3.legendHelpers.thresholdLabels);
+        
+        legendG.call(legend);
+        
+    };
+    
+    // Function to update the legend
+    function updateLegend(){
+        
+        // Create a threshold scale for the legend
+        var thresholdScale = d3.scaleThreshold()
+            .domain(classBreaks)
+            .range(colorClasses);
+        
+        // Add SVG element for legend
+        var legendSVG = d3.select(".legendSVG")
+
+        // Add group element to hold legend elements
+        var legendG = legendSVG.append("g")
+            .attr("class", "legendG")
+            .attr("transform", "translate(20, 20)");
+        
+        // Create legend elements
+        var legend = d3.legendColor()
+            .shapeWidth(100)
+            .orient("horizontal")
+            .scale(thresholdScale)
+            .title(expressed + " (%)")
+            .labels(d3.legendHelpers.thresholdLabels);
+        
+        legendG.call(legend);
+        
+    };
     
 })() // Last line of main.js

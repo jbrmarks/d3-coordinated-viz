@@ -1,8 +1,14 @@
 /* Stylesheet by Joe Marks, 2019 */
 
+.mapTitle{
+    font-weight: bolder;
+    font-size: 3em;
+    padding: 5px;
+}
+
 .baseMap {
     fill: #FFF;
-    stroke: #CCC;
+    stroke: rgba(0, 0, 0, 0.11);
     stroke-width: 1px;
 }
 
@@ -10,16 +16,6 @@
     stroke: #000;
     stroke-width: 0.5px;
     stroke-linecap: round;
-}
-
-.gratLines {
-    fill: none;
-    stroke: #999;
-    stroke-width: 1px;
-}
-
-.gratBackground {
-    fill: #D5E3FF
 }
 
 .map {
@@ -65,7 +61,7 @@
 
 .dropdown {
     position: absolute;
-    top: 30px;
+    top: 90px;
     left: 40px;
     z-index: 10;
     font-family: sans-serif;
@@ -97,4 +93,18 @@ option {
     padding: 0;
     display: inline-block;
     line-height: 1em;
+}
+
+.legendSVG{
+    fill: rgba(0, 0, 0);
+    position: absolute;
+    top: 630px;
+    left: 30px;
+    padding-top: 5px;
+    min-width: 1500px;
+}
+
+.legendTitle{
+    font-weight: bolder;
+    font-size: 1.25em;
 }
